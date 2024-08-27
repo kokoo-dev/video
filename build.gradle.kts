@@ -30,6 +30,9 @@ dependencies {
 
 	// commons io
 	implementation("commons-io:commons-io:2.16.1")
+
+	// thymeleaf
+	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 }
 
 tasks.withType<KotlinCompile> {

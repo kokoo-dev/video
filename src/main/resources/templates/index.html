@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th=http://www.thymeleaf.org lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Application</title>
+    <link href="https://vjs.zencdn.net/7.11.4/video-js.css" rel="stylesheet" />
+    <script src="https://vjs.zencdn.net/7.11.4/video.min.js"></script>
+</head>
+<body>
+<video id="video" class="video-js" controls="controls" width="400" autoplay="autoplay"></video>
+
+<script type="text/javascript" th:src="@{/js/index.js}"></script>
+
+</body>
+</html>
