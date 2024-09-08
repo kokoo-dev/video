@@ -12,27 +12,30 @@ import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
 import java.lang.StringBuilder
+import java.time.LocalTime
 
 @Service
 class HlsService {
 
-    fun createM3u8(file: MultipartFile) {
+    fun createM3u8(file: MultipartFile, thumbnailTime: LocalTime) {
         val filename = FilenameUtils.getBaseName(file.originalFilename)
         val inputFile = File.createTempFile(filename, ".${FilenameUtils.getExtension(file.originalFilename)}")
         file.transferTo(inputFile)
 
-        val outputFile = File("${FileConstant.DEFAULT_PATH}$filename.m3u8")
-        val command = createFfmpegCommand(inputFile.absolutePath, outputFile.absolutePath)
-        Runtime.getRuntime().exec(command).waitFor()
+        val outputM3u8File = File("${FileConstant.DEFAULT_PATH}$filename.m3u8")
+        createM3u8AndTsFile(inputFile.absolutePath, outputM3u8File.absolutePath)
+
+        val outputPngFile = File("${FileConstant.DEFAULT_PATH}$filename.png")
+        createThumbnail(inputFile.absolutePath, outputPngFile.absolutePath, thumbnailTime)
     }
 
-    fun createFfmpegCommand(
+    fun createM3u8AndTsFile(
         inputFilePath: String,
         outputFilePath: String,
         hlsTime: Int = 10,
         hlsListSize: Int = 0
-    ): String {
-        return StringBuilder("ffmpeg -i ")
+    ) {
+        val command = StringBuilder("ffmpeg -i ")
             .append(inputFilePath)
             .append(" -codec copy -hls_time ")
             .append(hlsTime)
@@ -41,6 +44,20 @@ class HlsService {
             .append(" ")
             .append(outputFilePath)
             .toString()
+
+        Runtime.getRuntime().exec(command).waitFor()
+    }
+
+    fun createThumbnail(inputFilePath: String, outputFilePath: String, thumbnailTime: LocalTime) {
+        val command = StringBuilder("ffmpeg -i ")
+            .append(inputFilePath)
+            .append(" -ss ")
+            .append(thumbnailTime)
+            .append(" -vcodec png -vframes 1 ")
+            .append(outputFilePath)
+            .toString()
+
+        Runtime.getRuntime().exec(command).waitFor()
     }
 
     fun getM3u8(baseFilename: String): ResponseEntity<Resource> {
