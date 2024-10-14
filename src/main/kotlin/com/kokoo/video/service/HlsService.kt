@@ -1,6 +1,8 @@
 package com.kokoo.video.service
 
 import com.kokoo.video.constant.FileConstant
+import net.bramp.ffmpeg.FFmpegExecutor
+import net.bramp.ffmpeg.builder.FFmpegBuilder
 import org.apache.commons.io.FilenameUtils
 import org.springframework.core.io.FileSystemResource
 import org.springframework.core.io.Resource
@@ -11,11 +13,13 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
-import java.lang.StringBuilder
 import java.time.LocalTime
 
+
 @Service
-class HlsService {
+class HlsService(
+    private val fFmpegExecutor: FFmpegExecutor
+) {
 
     fun createM3u8(file: MultipartFile, thumbnailTime: LocalTime) {
         val filename = FilenameUtils.getBaseName(file.originalFilename)
@@ -35,29 +39,27 @@ class HlsService {
         hlsTime: Int = 10,
         hlsListSize: Int = 0
     ) {
-        val command = StringBuilder("ffmpeg -i ")
-            .append(inputFilePath)
-            .append(" -codec copy -hls_time ")
-            .append(hlsTime)
-            .append(" -hls_list_size ")
-            .append(hlsListSize)
-            .append(" ")
-            .append(outputFilePath)
-            .toString()
+        val builder = FFmpegBuilder()
+            .setInput(inputFilePath)
+            .addOutput(outputFilePath)
+            .setFormat("hls")
+            .addExtraArgs("-hls_time", "10")
+            .addExtraArgs("-hls_list_size", "0")
+            .done()
 
-        Runtime.getRuntime().exec(command).waitFor()
+        fFmpegExecutor.createJob(builder).run()
     }
 
     fun createThumbnail(inputFilePath: String, outputFilePath: String, thumbnailTime: LocalTime) {
-        val command = StringBuilder("ffmpeg -i ")
-            .append(inputFilePath)
-            .append(" -ss ")
-            .append(thumbnailTime)
-            .append(" -vcodec png -vframes 1 ")
-            .append(outputFilePath)
-            .toString()
+        val builder: FFmpegBuilder = FFmpegBuilder()
+            .overrideOutputFiles(true)
+            .setInput(inputFilePath)
+            .addExtraArgs("-ss", thumbnailTime.toString())
+            .addOutput(outputFilePath)
+            .setFrames(1)
+            .done()
 
-        Runtime.getRuntime().exec(command).waitFor()
+        fFmpegExecutor.createJob(builder).run()
     }
 
     fun getM3u8(baseFilename: String): ResponseEntity<Resource> {

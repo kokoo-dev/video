@@ -33,6 +33,9 @@ dependencies {
 
 	// thymeleaf
 	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+
+	// ffmpeg
+	implementation("net.bramp.ffmpeg:ffmpeg:0.8.0")
 }
 
 tasks.withType<KotlinCompile> {
